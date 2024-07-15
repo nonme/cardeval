@@ -1,7 +1,7 @@
 import { rand } from 'src/utils/random.ts';
 import { CardEffect } from './cards.ts';
 import { Game } from './game.ts';
-import { Sect, Stat, Stats } from './types/base.ts';
+import { Stat, Stats } from './types/base.ts';
 import { Ward } from './ward.ts';
 
 interface Effect {
@@ -102,7 +102,9 @@ export class Hero {
   };
   amplifyUlti = (amount: number) => {};
 
-  update() {}
+  update(deltaTime: number) {
+    if (this.wardInstance !== null) this.wardInstance.update(deltaTime);
+  }
 
   clone(): Hero {
     const clonedHero = new Hero(this.game, { ...this.stats });
@@ -147,7 +149,9 @@ export class Hero {
     const effectInstance: EffectInstance = {
       ref: effect,
       startTick: this.game.tick(),
-      endTick: effect.duration ? this.game.tick() + Game.timeToTicks(effect.duration) : undefined,
+      endTick: effect.duration
+        ? this.game.tick() + Game.timeToTicks(effect.duration, this.game.getTickrate())
+        : undefined,
     };
     this.effects.push(effectInstance);
 

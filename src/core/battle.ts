@@ -6,11 +6,28 @@ class Battle {
   private heroA: Hero;
   private heroB: Hero;
 
+  private isFinished_: boolean = false;
+
   constructor(
     protected readonly playerA: Player,
     protected readonly playerB: Player,
   ) {
-    this.heroA = _.cloneDeep(this.playerA.hero) as Hero;
+    this.heroA = _.cloneDeep(this.playerA.hero);
+    this.heroB = _.cloneDeep(this.playerB.hero);
+  }
+
+  start = () => {};
+
+  isFinished = () => {
+    return this.isFinished_;
+  };
+
+  getWinner = () => {
+
+  }
+
+  getLoser = () => {
+    
   }
 
   update = () => {};
