@@ -4,7 +4,7 @@ import { Game } from './game.ts';
 import { Stat, Stats } from './types/base.ts';
 import { Ward } from './ward.ts';
 import _ from 'lodash';
-import { Battle } from './battle.ts';
+import { Battle } from './battle/Battle.ts';
 
 interface Effect {
   name: string;
@@ -100,6 +100,9 @@ export class Hero {
   };
 
   receiveDamage = (amount: number, type: DamageType) => {
+    const evasion = rand();
+    if (evasion < this.state.stats.Evasion && type == DamageType.Physical) return;
+
     this.state.currentHealth -= amount;
   };
 
