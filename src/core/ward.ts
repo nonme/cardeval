@@ -26,7 +26,7 @@ export class Ward {
     this.damageAmplification = damageAmplification;
   };
 
-  update = (deltaTime: number) => {};
+  update = () => {};
 
   clone = () => {
     const clonedWard = new Ward();

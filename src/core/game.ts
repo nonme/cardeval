@@ -14,8 +14,8 @@ export class Game {
   private isFastMode_ = false;
   private lastUpdateTime: number = 0;
   private accumulatedTime: number = 0;
-  private static readonly normalTickRate: number = 10; // 10 обновлений в секунду
-  private static readonly fastTickRate: number = 1000; // 1000 обновлений в секунду в быстром режиме
+
+  static readonly TickRate: number = 60; // 10 обновлений в секунду
 
   constructor(players: Player[]) {
     this.state = {
@@ -41,31 +41,29 @@ export class Game {
 
     this.accumulatedTime += deltaTime;
 
-    const tickRate = this.isFastMode_ ? Game.fastTickRate : Game.normalTickRate;
-    const tickInterval = 1 / tickRate;
+    const tickInterval = 1 / Game.TickRate;
 
     while (this.accumulatedTime >= tickInterval) {
-      this.update(tickInterval);
+      this.update();
       this.accumulatedTime -= tickInterval;
     }
 
     setImmediate(() => this.loop());
   }
 
-  private update(deltaTime: number) {
+  private update() {
     this.state.ticks++;
-    this.state.timeElapsed += deltaTime;
 
     for (const player of this.state.players) {
-      player.hero.update(deltaTime);
+      player.hero.update();
     }
 
     if (this.isShopping) {
-      this.isShopping = this.handleShoppingLogic(deltaTime);
+      this.isShopping = this.handleShoppingLogic();
     }
   }
 
-  private handleShoppingLogic(deltaTime: number): boolean {
+  private handleShoppingLogic(): boolean {
     // Реализуйте вашу логику покупок здесь
     // Верните true, если покупки должны продолжаться, false - если должны закончиться
     return false; // Пример: покупки всегда заканчиваются после одного тика
@@ -88,7 +86,7 @@ export class Game {
   }
 
   getTickrate = () => {
-    return this.isFastMode_ ? Game.fastTickRate : Game.normalTickRate;
+    return Game.TickRate;
   };
 
   getGameTimeElapsed(): number {

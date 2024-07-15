@@ -3,6 +3,8 @@ import { CardEffect } from './cards.ts';
 import { Game } from './game.ts';
 import { Stat, Stats } from './types/base.ts';
 import { Ward } from './ward.ts';
+import _ from 'lodash';
+import { Battle } from './battle.ts';
 
 interface Effect {
   name: string;
@@ -18,6 +20,20 @@ interface EffectInstance {
 
   startTick?: number;
   endTick?: number;
+}
+
+interface HeroState {
+  currentHealth: number;
+  attackCharge: number;
+
+  inBattle: boolean;
+  enemyHero: Hero | null;
+  stats: Stats;
+}
+
+enum DamageType {
+  Physical,
+  Magical,
 }
 
 export class Hero {
@@ -46,6 +62,7 @@ export class Hero {
       stacks: number;
     };
   } = {};
+  private state: HeroState;
 
   constructor(
     protected readonly game: Game,
@@ -66,12 +83,33 @@ export class Hero {
       Evasion: 0,
       Ward: 0,
     };
+    this.state = {
+      currentHealth: this.stats.Health,
+      attackCharge: 0,
+
+      inBattle: false,
+      enemyHero: null,
+      stats: this.stats,
+    };
   }
 
   ward = (): Ward => {
     if (this.wardInstance === null) this.wardInstance = new Ward();
 
     return this.wardInstance;
+  };
+
+  receiveDamage = (amount: number, type: DamageType) => {
+    this.state.currentHealth -= amount;
+  };
+
+  applyAttack = (hero: Hero) => {
+    const blocked = rand();
+    if (blocked < hero.stats.AttackBlock) return;
+
+    const attackDamage = this.stats.Attack;
+
+    hero.receiveDamage(attackDamage, DamageType.Physical);
   };
 
   applyPoison = (hero: Hero, amount: number) => {
@@ -102,42 +140,35 @@ export class Hero {
   };
   amplifyUlti = (amount: number) => {};
 
-  update(deltaTime: number) {
-    if (this.wardInstance !== null) this.wardInstance.update(deltaTime);
-  }
+  update() {
+    if (this.wardInstance !== null) this.wardInstance.update();
 
-  clone(): Hero {
-    const clonedHero = new Hero(this.game, { ...this.stats });
+    if (this.state.inBattle && this.state.enemyHero) {
+      this.state.attackCharge += this.state.stats.AttackSpeed;
 
-    clonedHero.sects = { ...this.sects };
+      if (this.state.attackCharge >= 1) {
+        this.applyAttack(this.state.enemyHero);
 
-    if (this.wardInstance) {
-      clonedHero.wardInstance = this.wardInstance.clone();
+        this.state.attackCharge -= 1;
+      }
     }
-
-    clonedHero.effects = this.effects.map((effect) => ({
-      ref: { ...effect.ref },
-      startTick: effect.startTick,
-      endTick: effect.endTick,
-    }));
-
-    clonedHero.effectsDict = Object.entries(this.effectsDict).reduce(
-      (dict, [key, value]) => {
-        dict[key] = {
-          effect: {
-            ref: { ...value.effect.ref },
-            startTick: value.effect.startTick,
-            endTick: value.effect.endTick,
-          },
-          stacks: value.stacks,
-        };
-        return dict;
-      },
-      {} as typeof this.effectsDict,
-    );
-
-    return clonedHero;
   }
+
+  startBattle = (enemyHero: Hero) => {
+    this.state.currentHealth = this.stats.Health;
+    this.state.inBattle = true;
+    this.state.attackCharge = 0;
+    this.state.stats = _.cloneDeep(this.stats);
+    this.state.enemyHero = enemyHero;
+  };
+
+  stopBattle = () => {
+    this.state.inBattle = false;
+  };
+
+  health = () => {
+    return this.state.currentHealth;
+  };
 
   countEffect(effectName: string) {
     if (!(effectName in this.effectsDict)) return 0;
