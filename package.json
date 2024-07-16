@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "run": "tsx ./src/tests/game/index.ts",
     "build": "tsc",
     "start": "tsx ./src/index.ts",
     "lint": "eslint src/**/*.{js,ts} --quiet",
