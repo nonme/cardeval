@@ -1,5 +1,6 @@
 import { Battle, BattleResult, BattleResultInfo } from './battle/Battle.ts';
 import { BattleMaker, RandomBattleMaker } from './battle/BattleMaker.ts';
+import { GameLogger } from './logger/GameLogger.ts';
 import { Player } from './player/Player.ts';
 import { Shop } from './shop/Shop.ts';
 import { ShopDialog } from './shop/ShopDialog.ts';
@@ -36,11 +37,7 @@ export class Game {
   private shopDialogs: {
     [playerId: number]: ShopDialog;
   } = {};
-  private battleResults: {
-    [round: number]: {
-      [playerId: number]: BattleResultInfo;
-    };
-  } = {};
+  private logger: GameLogger = new GameLogger(this);
 
   static readonly TickRate: number = 60; // 10 обновлений в секунду
 
@@ -136,7 +133,7 @@ export class Game {
             this.awardPlayer(winner, BattleResult.Victory);
             this.awardPlayer(loser, BattleResult.Victory);
 
-            this.logBattle(winner, loser);
+            this.logger.logBattle(winner, loser);
           });
           this.state.stage = GameStage.PREPARETION;
           this.state.currentBattles = null;
@@ -147,21 +144,6 @@ export class Game {
       }
     }
   }
-
-  private logBattle = (winner: Player, loser: Player) => {
-    if (!(this.state.currentRound in this.battleResults))
-      this.battleResults[this.state.currentRound] = {};
-    this.battleResults[this.state.currentRound][winner.id] = {
-      enemy: loser,
-      result: BattleResult.Victory,
-      round: this.state.currentRound,
-    };
-    this.battleResults[this.state.currentRound][loser.id] = {
-      enemy: winner,
-      result: BattleResult.Defeat,
-      round: this.state.currentRound,
-    };
-  };
 
   isGameOver = () => {
     let deadPlayers = 0;
@@ -215,7 +197,7 @@ export class Game {
   private awardPlayer = (player: Player, battleResult: BattleResult) => {
     let specialAward = 0;
     if (battleResult === BattleResult.Victory) {
-      const battlesBefore = this.getBattleResults(player, 1, this.state.currentRound);
+      const battlesBefore = this.logger.getBattleResults(player, 1, this.state.currentRound);
       const winstreak = this.countWinstreak(this.state.currentRound, battlesBefore) + 1;
       specialAward = Math.min(100, 20 * winstreak);
     } else {
@@ -236,14 +218,6 @@ export class Game {
       else break;
     }
     return winstreak;
-  };
-
-  private getBattleResults = (player: Player, roundFrom: number, roundTo: number) => {
-    const battleResults: BattleResultInfo[] = [];
-    for (let i = roundFrom; i < roundTo; ++i) {
-      battleResults.push(this.battleResults[i][player.id]);
-    }
-    return battleResults;
   };
 
   setFastMode(isFast: boolean) {
