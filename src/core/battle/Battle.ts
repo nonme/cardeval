@@ -1,7 +1,7 @@
 import { rand } from 'src/utils/random.ts';
-import { Game } from './game.ts';
-import { Hero } from './hero.ts';
-import { Player } from './player.ts';
+import { Game } from '../game.ts';
+import { Hero } from '../hero.ts';
+import { Player } from '../player.ts';
 import _ from 'lodash';
 
 export class Battle {

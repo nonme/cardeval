@@ -35,20 +35,9 @@ export class Game {
   private loop() {
     if (!this.isRunning) return;
 
-    const currentTime = Date.now();
-    const deltaTime = (currentTime - this.lastUpdateTime) / 1000; // в секундах
-    this.lastUpdateTime = currentTime;
+    this.update();
 
-    this.accumulatedTime += deltaTime;
-
-    const tickInterval = 1 / Game.TickRate;
-
-    while (this.accumulatedTime >= tickInterval) {
-      this.update();
-      this.accumulatedTime -= tickInterval;
-    }
-
-    setImmediate(() => this.loop());
+    if (!this.isFastMode_) setTimeout(() => this.loop(), 1 / Game.TickRate);
   }
 
   private update() {
